@@ -379,7 +379,7 @@ def main(args):
             weight = nd.concat(*[x.reshape((-1, 1)) for x in tmp], dim=0)
 
             # use lbfgs to calculate hessian vector product
-            if e > 300000:
+            if e > 50:
                 hvp = lbfgs(args, weight_record, grad_record, weight - last_weight)
             else:
                 hvp = None
