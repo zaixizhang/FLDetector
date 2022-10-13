@@ -35,7 +35,6 @@ def parse_args():
                                  'edge'])
     parser.add_argument("--aggregation", help="aggregation rule", default='median', type=str,
                         choices=['simple_mean', 'trim', 'krum', 'median'])
-    parser.add_argument("--advanced_backdoor", help="a little is enough paper", default=False, type=bool)
     return parser.parse_args()
 
 
@@ -204,57 +203,6 @@ def main(args):
                 acc.update(preds=predictions, labels=label)
 
             return acc.get()[1]
-
-        ########################################################################################################################
-
-        def train_malicious_net(original_params, user_grads, lr):
-            grads_mean = nd.moments(nd.concat(*user_grads[:args.nbyz], dim=1), axes=1)[0]
-            grads_stdev = (nd.moments(nd.concat(*user_grads[:args.nbyz], dim=1), axes=1)[1]) ** 0.5
-
-            alpha = 0.8
-            num_std = 0.2
-            new_user_grads = []
-            softmax_cross_entropy = gluon.loss.SoftmaxCrossEntropyLoss()
-            mse = gluon.loss.L2Loss(batch_axis=1)
-
-            for i in range(args.nbyz):
-                # reset the parameters of network
-                net1 = cnn
-                net1.collect_params().initialize(mx.init.Xavier(magnitude=2.24), force_reinit=True, ctx=ctx)
-                initial_params = []
-
-                idx = 0
-                for j, (param) in enumerate(net1.collect_params().values()):
-                    initial = (original_params[idx:(idx + param.data().size)].reshape(
-                        (-1,)) - lr * grads_mean[idx:(idx + param.data().size)]).reshape(param.data().shape)
-                    initial_params.append(initial)
-                    param.set_data(initial)
-                    idx += param.data().size
-
-                mx_trainer = gluon.Trainer(net1.collect_params(), 'sgd', {'learning_rate': 0.001})
-
-                for epoch in range(5):
-                    with autograd.record():
-                        minibatch = np.random.choice(range(each_worker_data[i].shape[0]), size=32,
-                                                     replace=False)
-                        output1 = net1(each_worker_data[i][minibatch])
-                        loss1 = softmax_cross_entropy(output1, each_worker_label[i][minibatch]) * alpha
-                        for j, (param) in enumerate(net1.collect_params().values()):
-                            loss1 = loss1 + mse(param.data().reshape((-1, 1)), initial_params[j].reshape((-1, 1)))/param.data().size * (1 - alpha)
-
-                    loss1.backward()
-                    mx_trainer.step(batch_size=32)
-
-                mal_net_params = params_convert(net1)
-                del net1, loss1
-                new_grads = (original_params - mal_net_params) / lr
-
-                grads = clip(new_grads, (grads_mean - num_std * grads_stdev).reshape((-1, 1)),
-                             (grads_mean + num_std * grads_stdev).reshape((-1, 1)))
-
-                new_user_grads.append(new_grads)
-
-            return new_user_grads
 
         ########################################################################################################################
 
@@ -512,9 +460,6 @@ def main(args):
             for param in net.collect_params().values():
                 tmp.append(param.data().copy())
             weight = nd.concat(*[x.reshape((-1, 1)) for x in tmp], dim=0)
-
-            if args.advanced_backdoor:
-                param_list[:args.nbyz] = train_malicious_net(weight.copy(), param_list, lr)
 
             # use lbfgs to calculate hessian vector product
             if e > 50:
