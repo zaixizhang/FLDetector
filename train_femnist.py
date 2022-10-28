@@ -26,8 +26,8 @@ def parse_args():
     parser.add_argument("--lr", help="learning rate", default=0.002, type=float)
     parser.add_argument("--nworkers", help="# workers", default=300, type=int)
     parser.add_argument("--nepochs", help="# epochs", default=2000, type=int)
-    parser.add_argument("--gpu", help="index of gpu", default=5, type=int)
-    parser.add_argument("--seed", help="seed", default=41, type=int)
+    parser.add_argument("--gpu", help="index of gpu", default=0, type=int)
+    parser.add_argument("--seed", help="seed", default=42, type=int)
     parser.add_argument("--nbyz", help="# byzantines", default=84, type=int)
     parser.add_argument("--byz_type", help="type of attack", default='scaling_attack', type=str,
                         choices=['no', 'partial_trim', 'full_trim', 'mean_attack', 'full_mean_attack', 'gaussian',
