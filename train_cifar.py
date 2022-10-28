@@ -21,14 +21,14 @@ np.warnings.filterwarnings('ignore')
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", help="dataset", default='cifar10', type=str)
-    parser.add_argument("--bias", help="degree of non-IID to assign data to workers", type=float, default=0.9)
+    parser.add_argument("--bias", help="degree of non-IID to assign data to workers", type=float, default=0.1)
     parser.add_argument("--net", help="net", default='resnet', type=str, choices=['mlr', 'cnn', 'fcnn', 'resnet'])
     parser.add_argument("--batch_size", help="batch size", default=32, type=int)
     parser.add_argument("--lr", help="learning rate", default=0.001, type=float)
     parser.add_argument("--nworkers", help="# workers", default=100, type=int)
     parser.add_argument("--nepochs", help="# epochs", default=2000, type=int)
-    parser.add_argument("--gpu", help="index of gpu", default=4, type=int)
-    parser.add_argument("--seed", help="seed", default=41, type=int)
+    parser.add_argument("--gpu", help="index of gpu", default=0, type=int)
+    parser.add_argument("--seed", help="seed", default=42, type=int)
     parser.add_argument("--nbyz", help="# byzantines", default=28, type=int)
     parser.add_argument("--byz_type", help="type of attack", default='scaling_attack', type=str,
                         choices=['no', 'partial_trim', 'full_trim', 'mean_attack', 'full_mean_attack', 'gaussian',
